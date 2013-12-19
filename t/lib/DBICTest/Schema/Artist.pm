@@ -148,14 +148,14 @@ __PACKAGE__->has_many(
 __PACKAGE__->many_to_many('artworks', 'artwork_to_artist', 'artwork');
 
 __PACKAGE__->has_many(
-    cds_with_genre => 'DBICTest::Schema::CD',
+    cds_without_genre => 'DBICTest::Schema::CD',
     sub {
         my $args = shift;
         return +{
             "$args->{foreign_alias}.artist" => { -ident => "$args->{self_alias}.artistid" },
 
             # this doesn't seem to work...
-            "$args->{foreign_alias}.title" => undef,
+            "$args->{foreign_alias}.genreid" => undef,
             # instead we need to say this:
             # "$args->{foreign_alias}.genreid" => { '!=' => undef },
         }
