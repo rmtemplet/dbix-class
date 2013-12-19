@@ -151,14 +151,15 @@ __PACKAGE__->has_many(
     cds_without_genre => 'DBICTest::Schema::CD',
     sub {
         my $args = shift;
-        return +{
+        return (
+          {
             "$args->{foreign_alias}.artist" => { -ident => "$args->{self_alias}.artistid" },
-
-            # this doesn't seem to work...
             "$args->{foreign_alias}.genreid" => undef,
-            # instead we need to say this:
-            # "$args->{foreign_alias}.genreid" => { '!=' => undef },
-        }
+          }, $args->{self_rowobj} && {
+            "$args->{foreign_alias}.artist" => $args->{self_rowobj}->artistid,
+            "$args->{foreign_alias}.genreid" => undef,
+          }
+        ),
     },
 );
 
