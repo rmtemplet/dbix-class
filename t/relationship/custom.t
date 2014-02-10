@@ -160,12 +160,16 @@ throws_ok {
 'Create failed - complex cond';
 
 # now supply an explicit arg overwriting the ambiguous cond
-my $id_2020 = $artist->create_related('cds_80s', { title => 'related creation 2', year => '2020' })->id;
+my $cd_2020 = $artist->create_related('cds_80s', { title => 'related creation 2', year => '2020' });
+my $id_2020 = $cd_2020->id;
 is(
   $schema->resultset('CD')->find($id_2020)->title,
   'related creation 2',
   '2020 CD created correctly'
 );
+
+# use set_from_related
+$artist->set_from_related('cds_80s', $cd_2020);
 
 # try a default year from a specific rel
 my $id_1984 = $artist->create_related('cds_84', { title => 'related creation 3' })->id;
@@ -268,5 +272,17 @@ is_deeply (
   [ map { $_->title } @singles ],
   'Prefetched singles in proper order'
 );
+
+# test set_from_related with a belongs_to custom condition
+my $cd = $schema->resultset("CD")->find(4);
+my $artist = $cd->search_related('artist');
+my $track = $schema->resultset("Track")->create( {
+  trackid => 1,
+  cd => 3,
+  position => 99,
+  title => 'Some Track'
+} );
+$track->set_from_related( cd_code => $cd );
+ok ($track->cd, 'set from related with code ok');
 
 done_testing;

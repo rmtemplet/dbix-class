@@ -53,6 +53,20 @@ __PACKAGE__->grouping_column ('cd');
 __PACKAGE__->belongs_to( cd => 'DBICTest::Schema::CD', undef, {
     proxy => { cd_title => 'title' },
 });
+# custom condition coderef
+__PACKAGE__->belongs_to( cd_code => 'DBICTest::Schema::CD',
+sub {
+  my $args = shift;
+  return (
+    {
+      "$args->{foreign_alias}.cd" => { -ident => "$args->{self_alias}.cdid" },
+    },
+    $args->{self_rowobj} && {
+       "$args->{foreign_alias}.cd" => $args->{self_rowobj}->cdid,
+    },
+  );
+}
+);
 __PACKAGE__->belongs_to( disc => 'DBICTest::Schema::CD' => 'cd', {
     proxy => 'year'
 });
