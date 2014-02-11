@@ -35,6 +35,17 @@ if [[ -n "$BREWVER" ]] ; then
     perlbrew_jopt="$NUMTHREADS"
   fi
 
+  # Raise the default limit 4 times, alh++ for figuring this out
+  # http://www.nntp.perl.org/group/perl.perl5.porters/2014/02/msg212747.html
+  if [[ "$BREWOPTS" =~ "PERL_DEBUG_READONLY_COW" ]] ; then
+    for f in /proc/sys/vm/* ; do
+      echo -n "$f  "
+      cat $f || true
+    done
+
+    sudo bash -c "echo 65530 > /proc/sys/vm/max_map_count"
+  fi
+
   run_or_err "Compiling/installing Perl $BREWVER (without testing, using ${perlbrew_jopt:-1} threads, may take up to 5 minutes)" \
     "perlbrew install --as $BREWVER --notest --noman --verbose $BREWOPTS -j${perlbrew_jopt:-1}  $BREWVER"
 
@@ -54,6 +65,8 @@ if [[ -n "$BREWVER" ]] ; then
 # Idea stolen from
 # https://github.com/kentfredric/Dist-Zilla-Plugin-Prereqs-MatchInstalled-All/blob/master/maint-travis-ci/sterilize_env.pl
 elif [[ "$CLEANTEST" == "true" ]] && [[ "$POISON_ENV" != "true" ]] ; then
+
+exit 0
 
   echo_err "$(tstamp) Cleaning precompiled Travis-Perl"
   perl -MConfig -MFile::Find -e '
