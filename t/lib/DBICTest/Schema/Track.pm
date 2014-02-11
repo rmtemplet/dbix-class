@@ -61,6 +61,7 @@ sub {
     {
       "$args->{foreign_alias}.cd" => { -ident => "$args->{self_alias}.cdid" },
     },
+    # me.cd => $track->cd
     $args->{self_rowobj} && {
        "$args->{foreign_alias}.cd" => $args->{self_rowobj}->cdid,
     },

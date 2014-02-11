@@ -1683,18 +1683,19 @@ our $UNRESOLVABLE_CONDITION = \ '1 = 0';
 sub _resolve_condition {
   my ($self, $cond, $as, $for, $rel_name) = @_;
 
-  my $obj_rel = defined blessed $for;
+
+  my $obj_rel = defined blessed $for || defined blessed $as;
 
   if (ref $cond eq 'CODE') {
     my $relalias = $obj_rel ? 'me' : $as;
-
-    my ($crosstable_cond, $joinfree_cond) = $cond->({
-      self_alias => $obj_rel ? $as : $for,
+    my $args = {
+      self_alias => blessed($for) ? $as : $for,
       foreign_alias => $relalias,
       self_resultsource => $self,
       foreign_relname => $rel_name || ($obj_rel ? $as : $for),
-      self_rowobj => $obj_rel ? $for : undef
-    });
+      self_rowobj => blessed($for) ? $for : ( blessed($as) ? $as : undef ),
+    };
+    my ($crosstable_cond, $joinfree_cond) = $cond->($args);
 
     my $cond_cols;
     if ($joinfree_cond) {
@@ -1728,8 +1729,14 @@ sub _resolve_condition {
       }
 
       # see which parts of the joinfree cond are conditionals
-      my $relcol_list = { map { $_ => 1 } $self->related_source($rel_name)->columns };
-
+      my @columns;
+      if ( blessed $for ) {
+        @columns = $self->related_source($rel_name)->columns;
+      }
+      elsif ( blessed $as ) {
+        @columns = $self->columns;
+      }
+      my $relcol_list = { map { $_ => 1 } @columns };
       for my $c (keys %$joinfree_cond) {
         my ($colname) = $c =~ /^ (?: \Q$relalias.\E )? (.+)/x;
 

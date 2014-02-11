@@ -51,6 +51,19 @@ __PACKAGE__->has_many(
     { order_by => { -asc => 'year'} },
 );
 
+__PACKAGE__->has_many(
+  cds_code => 'DBICTest::Schema::CD',
+  sub {
+    my $args = shift;
+    return (
+      { "$args->{foreign_alias}.artist" => { '=' => { -ident => "$args->{self_alias}.artistid"} },
+      },
+      $args->{self_rowobj} && {
+        "$args->{foreign_alias}.artist" => $args->{self_rowobj}->artistid,
+      }
+    );
+  },
+);
 
 __PACKAGE__->has_many(
   cds_80s => 'DBICTest::Schema::CD',

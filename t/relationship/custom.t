@@ -152,6 +152,10 @@ is_deeply(
 
 } 'prefetchy-fetchy-fetch';
 
+# create_related a plain cd via cd_code, with no conditions
+lives_ok {
+  $artist->create_related('cds_code', { title => 'related creation from code', year => '2010' } );
+} 'created_related with simple condition works';
 
 # try to create_related a 80s cd
 throws_ok {
@@ -167,9 +171,6 @@ is(
   'related creation 2',
   '2020 CD created correctly'
 );
-
-# use set_from_related
-$artist->set_from_related('cds_80s', $cd_2020);
 
 # try a default year from a specific rel
 my $id_1984 = $artist->create_related('cds_84', { title => 'related creation 3' })->id;
@@ -275,7 +276,7 @@ is_deeply (
 
 # test set_from_related with a belongs_to custom condition
 my $cd = $schema->resultset("CD")->find(4);
-my $artist = $cd->search_related('artist');
+$artist = $cd->search_related('artist');
 my $track = $schema->resultset("Track")->create( {
   trackid => 1,
   cd => 3,
